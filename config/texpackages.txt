@@ -1,0 +1,31 @@
+# LaTeX packages requirements file for tlmgr
+# Add one package name per line. Comments starting with # are ignored.
+
+collection-latexrecommended
+mwe
+vntex
+algorithm2e
+appendix
+blindtext
+capt-of
+chngcntr
+datatool
+enumitem
+glossaries
+import
+mfirstuc
+multirow
+outlines
+subfiles
+substr
+titlesec
+tracklang
+xfor
+xurl
+ifoddpage
+endfloat
+relsize
+tocbibind
+biblatex
+logreq
+biblatex-ieee

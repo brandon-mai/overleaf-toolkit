@@ -1,0 +1,14 @@
+{
+  "name": "clanker-bot",
+  "version": "1.0.0",
+  "description": "Clanker AI Collaborator Bot service",
+  "main": "clanker-bot.js",
+  "type": "module",
+  "dependencies": {
+    "axios": "^1.6.8",
+    "cookie-signature": "^1.1.0",
+    "mongodb": "^6.5.0",
+    "redis": "^4.6.13",
+    "socket.io-client": "0.9.17"
+  }
+}

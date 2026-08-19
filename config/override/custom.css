@@ -1,0 +1,81 @@
+.navbar-logo {
+    /* 1. Theme-recoloring SVG Mask */
+    color: color-mix(in oklab,var(--navbar-title-color, currentColor) 90%,transparent) !important;
+    background-color: currentColor !important;
+    background-image: none !important;
+    
+    -webkit-mask-image: var(--custom-logo-url) !important;
+    mask-image: var(--custom-logo-url) !important;
+    -webkit-mask-size: contain !important;
+    mask-size: contain !important;
+    -webkit-mask-repeat: no-repeat !important;
+    mask-repeat: no-repeat !important;
+    -webkit-mask-position: center !important;
+    mask-position: center !important;
+    
+    /* 2. Sizing & Alignment */
+    height: 1.5em !important;
+    width: 1.5em !important;
+    display: inline-block !important;
+    vertical-align: middle;
+    
+    /* 3. Reset offsets */
+    position: static !important;
+    top: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+}
+
+/* 5. Parent container alignment */
+a.navbar-brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    text-decoration: none;
+}
+
+.navbar-title {
+    display: inline-block !important;
+    line-height: 1;
+}
+
+/* Make all avatars, presence initials, and icons non-selectable */
+.avatar,
+.ide-redesign-online-users button,
+.ide-redesign-online-users span,
+.message-avatar .avatar,
+.material-symbols {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+}
+
+/* Green Robot Avatar for Clanker */
+.clanker-avatar,
+[style*="217, 38, 193"],
+[style*="216, 38, 192"],
+[style*="308, 70%"],
+[style*="308,70%"] {
+    background-color: #2e7d32 !important; /* Green */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='5' y='8' width='14' height='11' rx='2' fill='white'/><circle cx='9' cy='13' r='1.5' fill='%232e7d32'/><circle cx='15' cy='13' r='1.5' fill='%232e7d32'/><path d='M8 16.5h8' stroke='%232e7d32' stroke-width='1.5' stroke-linecap='round'/><rect x='3' y='12' width='2' height='3' rx='1' fill='white'/><rect x='19' y='12' width='2' height='3' rx='1' fill='white'/><path d='M12 3v5M10 3h4' stroke='white' stroke-width='1.5' stroke-linecap='round'/></svg>") !important;
+    background-size: 80% !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    color: transparent !important; /* Hide initials */
+    text-shadow: none !important;
+}
+
+/* Override Clanker's Editor Cursor & Tooltip (Hue 308) to Green */
+.ol-cm-cursorHighlight[style*="--hue:308"],
+.ol-cm-cursorHighlight[style*="--hue: 308"] {
+    border-left-color: #2e7d32 !important;
+}
+.ol-cm-cursorHighlight[style*="--hue:308"]::before,
+.ol-cm-cursorHighlight[style*="--hue: 308"]::before {
+    border-color: #2e7d32 !important;
+}
+.ol-cm-cursorHighlightLabel[style*="--hue:308"],
+.ol-cm-cursorHighlightLabel[style*="--hue: 308"] {
+    background-color: #2e7d32 !important;
+}

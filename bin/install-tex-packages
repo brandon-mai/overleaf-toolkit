@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+TOOLKIT_ROOT="$(realpath "$SCRIPT_DIR/..")"
+PACKAGES_FILE="$TOOLKIT_ROOT/config/texpackages.txt"
+
+BASE_IMAGE="sharelatex/sharelatex:ext-ce"
+TARGET_IMAGE="sharelatex/sharelatex:ext-ce-tex-packages-installed"
+BUILD_CONTAINER="sharelatex-package-builder"
+
+if [ ! -f "$PACKAGES_FILE" ]; then
+  echo "ERROR: $PACKAGES_FILE not found."
+  exit 1
+fi
+
+echo "Cleaning up any old builder containers..."
+docker rm -f "$BUILD_CONTAINER" >/dev/null 2>&1 || true
+
+echo "Starting temporary builder container from base image: $BASE_IMAGE..."
+docker run -d --name "$BUILD_CONTAINER" --entrypoint sleep "$BASE_IMAGE" infinity
+
+# Clean up temp container on script exit (even if it fails)
+trap 'echo "Cleaning up..."; docker rm -f "$BUILD_CONTAINER" >/dev/null 2>&1 || true' EXIT
+
+echo "Updating tlmgr self..."
+docker exec -i "$BUILD_CONTAINER" tlmgr update --self
+
+echo "Installing packages listed in config/texpackages.txt..."
+# Filter out empty lines and comments
+PACKAGES=$(grep -v '^#' "$PACKAGES_FILE" | grep -v '^[[:space:]]*$' | tr '\n' ' ')
+
+if [ -n "$PACKAGES" ]; then
+  docker exec -i "$BUILD_CONTAINER" tlmgr install $PACKAGES
+  echo "Updating system paths..."
+  docker exec -i "$BUILD_CONTAINER" tlmgr path add
+  
+  echo "Committing builder container to: $TARGET_IMAGE..."
+  docker commit --change 'ENTRYPOINT ["/sbin/my_init"]' "$BUILD_CONTAINER" "$TARGET_IMAGE"
+  
+  echo "--------------------------------------------------------"
+  echo "SUCCESS: New image built: $TARGET_IMAGE"
+  echo "To apply, restart your toolkit stack with:"
+  echo "  ./bin/stop && ./bin/up -d"
+  echo "--------------------------------------------------------"
+else
+  echo "No packages listed to install."
+fi

@@ -1,0 +1,30 @@
+services:
+  sharelatex:
+    image: sharelatex/sharelatex:ext-ce-tex-packages-installed
+    entrypoint: >
+      bash -c "
+        node /overleaf/patch-files.js &&
+        exec /sbin/my_init
+      "
+    volumes:
+      - ../config/override/custom.css:/overleaf/services/web/public/stylesheets/custom.css
+      - ../config/override/patch-files.js:/overleaf/patch-files.js
+
+  clanker:
+    image: node:20-alpine
+    container_name: clanker-bot
+    volumes:
+      - ../config/clanker:/app
+      - ../data/overleaf:/var/lib/overleaf:ro
+    working_dir: /app
+    command: sh -c "npm install && node clanker-bot.js"
+    env_file:
+      - ../config/variables.env
+    environment:
+      - REDIS_HOST=redis
+      - SHARELATEX_URL=http://sharelatex
+    depends_on:
+      - redis
+      - sharelatex
+    ports:
+      - "5050:5050"

@@ -4,8 +4,10 @@
 tmp/
 *.swp
 
-config/**/*
+config/variables.env
 !config/.gitkeep
 
 data/**/*
 !data/.gitkeep
+
+node_modules/
