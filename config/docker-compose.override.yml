@@ -13,6 +13,7 @@ services:
   clanker:
     image: node:20-alpine
     container_name: clanker-bot
+    restart: unless-stopped
     volumes:
       - ../config/clanker:/app
       - ../data/overleaf:/var/lib/overleaf:ro

@@ -5,9 +5,10 @@ SCRIPT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 TOOLKIT_ROOT="$(realpath "$SCRIPT_DIR/..")"
 
 # 1. Dynamically resolve all compose files, overrides, and environment variables
-COMPOSE_CONFIG="$("${TOOLKIT_ROOT}/bin/docker-compose" config)"
+# 2. Enforce 'restart: unless-stopped' strategy for all services
+COMPOSE_CONFIG="$("${TOOLKIT_ROOT}/bin/docker-compose" config | sed 's/restart: always/restart: unless-stopped/g')"
 
-# 2. Print resolved compose config
+# 3. Print resolved compose config
 echo "$COMPOSE_CONFIG"
 
 # 3. Append ZimaOS / CasaOS metadata schema
