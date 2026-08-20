@@ -6,12 +6,20 @@ TOOLKIT_ROOT="$(realpath "$SCRIPT_DIR/..")"
 
 # 1. Dynamically resolve all compose files, overrides, and environment variables
 # 2. Enforce 'restart: unless-stopped' strategy for all services
-COMPOSE_CONFIG="$("${TOOLKIT_ROOT}/bin/docker-compose" config | sed 's/restart: always/restart: unless-stopped/g')"
+# 3. Prefix container names with 'overleaf-' to avoid naming collisions on ZimaOS
+# 4. Remove host_ip: 127.0.0.1 binding so port 8008 is accessible across LAN
+COMPOSE_CONFIG="$("${TOOLKIT_ROOT}/bin/docker-compose" config | \
+  sed 's/restart: always/restart: unless-stopped/g' | \
+  sed 's/container_name: clanker-bot/container_name: overleaf-clanker-bot/g' | \
+  sed 's/container_name: mongo/container_name: overleaf-mongo/g' | \
+  sed 's/container_name: redis/container_name: overleaf-redis/g' | \
+  sed 's/container_name: sharelatex/container_name: overleaf-sharelatex/g' | \
+  sed '/host_ip: 127\.0\.0\.1/d')"
 
-# 3. Print resolved compose config
+# 5. Print resolved compose config
 echo "$COMPOSE_CONFIG"
 
-# 3. Append ZimaOS / CasaOS metadata schema
+# 6. Append ZimaOS / CasaOS metadata schema
 cat << 'EOF'
 
 x-casaos:

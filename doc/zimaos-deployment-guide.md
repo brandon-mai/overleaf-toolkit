@@ -6,10 +6,10 @@ This guide documents how to deploy, test, and manage our custom Overleaf + Clank
 
 ## 1. Architecture Overview
 
-- **ShareLaTeX (Overleaf Community Edition Plus)**: Runs with custom TeX Live packages (`sharelatex/sharelatex:ext-ce-tex-packages-installed`), customized brand logo, theme-responsive CSS mask, and Pug view patches.
-- **Clanker Bot Daemon**: Runs on `node:20-alpine`, orchestrating real-time WebSocket collaborator participation, LLM queries, and an interactive web dashboard on port `5050`.
-- **Database Backend**: MongoDB 8.0 (ReplicaSet mode for document history) + Redis 7.4 (AOF persistence).
-- **ZimaOS Web App Tile**: Native GUI management (start/stop/restart/logs and 1-click web launch).
+- **ShareLaTeX (Overleaf Community Edition Plus)**: Runs with custom TeX Live packages (`sharelatex/sharelatex:ext-ce-tex-packages-installed`), customized brand logo, theme-responsive CSS mask, and Pug view patches (`overleaf-sharelatex`).
+- **Clanker Bot Daemon**: Runs on `node:20-alpine`, orchestrating real-time WebSocket collaborator participation, LLM queries, and an interactive web dashboard on port `5050` (`overleaf-clanker-bot`).
+- **Database Backend**: MongoDB 8.0 (`overleaf-mongo`, ReplicaSet mode for document history) + Redis 7.4 (`overleaf-redis`, AOF persistence).
+- **ZimaOS Web App Tile**: Native GUI management (start/stop/restart/logs and 1-click web launch at `http://<zimaos-ip>:8008`).
 
 ---
 
@@ -68,29 +68,42 @@ curl -sI http://localhost:8008/login | grep "HTTP"       # Should return HTTP/1.
 curl -s http://localhost:5050/api/data | head -c 100     # Should return Clanker JSON pool
 
 # 4. Inspect Clanker & Overleaf logs
-docker logs clanker-bot --tail 20
-docker logs sharelatex --tail 20
+docker logs overleaf-clanker-bot --tail 20
+docker logs overleaf-sharelatex --tail 20
 
-# 5. Stop the CLI stack before importing to ZimaOS GUI
+# 5. Stop the CLI stack before registering to ZimaOS App Management
 bin/stop
 ```
 
 ---
 
-## 5. Generate & Install ZimaOS Custom App (GUI)
+## 5. Register & Install ZimaOS Custom App (GUI)
 
-To manage Overleaf directly from the ZimaOS browser interface:
+To register Overleaf as a native ZimaOS App tile:
 
-### 1. Generate the Custom App YAML
-Run this helper script inside the repo on ZimaOS:
+### Method A: Direct File Injection (Recommended for Terminal)
+On ZimaOS (as `root` or `sudo`):
 ```bash
-./bin/generate-zimaos-app
-```
-*(This automatically resolves your current repository directory and outputs the complete Docker Compose YAML with `x-casaos` UI metadata).*
+cd /DATA/AppData/overleaf-toolkit
 
-### 2. Import into ZimaOS
+# 1. Create ZimaOS app folder
+mkdir -p /var/lib/casaos/apps/overleaf/
+touch /var/lib/casaos/apps/overleaf/docker-compose.yml
+
+# 2. Generate and write the resolved Compose YAML
+bin/generate-zimaos-app > /var/lib/casaos/apps/overleaf/docker-compose.yml
+
+# 3. Restart ZimaOS app management service to register the new tile
+systemctl restart zimaos-app-management
+
+# 4. Launch the stack
+cd /var/lib/casaos/apps/overleaf/
+docker compose up -d
+```
+
+### Method B: Via ZimaOS Web Dashboard UI
 1. Open the ZimaOS web dashboard in your browser (`http://<zimaos-ip>`).
-2. Click **"+"** (Top-right of the dashboard grid) $\to$ **"Install a custom app"**.
+2. Click **"+"** (Top-right of dashboard grid) $\to$ **"Install a custom app"**.
 3. Click the **"Import"** icon in the top-right corner of the popup modal.
 4. Paste the output from `./bin/generate-zimaos-app`.
 5. Click **Submit** $\to$ **Install**.
@@ -105,6 +118,6 @@ To continue developing custom features, Clanker bot logic, or CSS overrides:
 2. Connect via **Remote - SSH**: `ssh admin@<zimaos-ip>`.
 3. Open workspace directory: `/DATA/AppData/overleaf-toolkit`.
 4. To reload changes:
-   - **Clanker code updates** (`config/clanker/`): `docker restart clanker-bot`
-   - **CSS / UI patch updates** (`config/override/`): `docker restart sharelatex`
-   - **LaTeX packages** (`config/texpackages.txt`): Run `./bin/install-tex-packages && docker restart sharelatex`
+   - **Clanker code updates** (`config/clanker/`): `docker restart overleaf-clanker-bot`
+   - **CSS / UI patch updates** (`config/override/`): `docker restart overleaf-sharelatex`
+   - **LaTeX packages** (`config/texpackages.txt`): Run `./bin/install-tex-packages && docker restart overleaf-sharelatex`
