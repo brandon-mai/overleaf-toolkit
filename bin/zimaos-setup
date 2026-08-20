@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+TOOLKIT_ROOT="$(realpath "$SCRIPT_DIR/..")"
+CASAOS_APP_DIR="/var/lib/casaos/apps/overleaf"
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "ERROR: bin/zimaos-setup must be run as root (e.g., sudo ./bin/zimaos-setup or run as root)." >&2
+  exit 1
+fi
+
+echo "========================================================"
+echo "          Overleaf ZimaOS Initial Setup                 "
+echo "========================================================"
+
+echo "==> Creating required directories..."
+mkdir -p "$CASAOS_APP_DIR"
+mkdir -p "${TOOLKIT_ROOT}/data/mongo"
+mkdir -p "${TOOLKIT_ROOT}/data/redis"
+mkdir -p "${TOOLKIT_ROOT}/data/overleaf"
+touch "${CASAOS_APP_DIR}/docker-compose.yml"
+
+echo "==> Setting permissions..."
+chmod -R 777 "${TOOLKIT_ROOT}/data"
+
+echo "==> Launching and registering ZimaOS App..."
+"${TOOLKIT_ROOT}/bin/zimaos-up"

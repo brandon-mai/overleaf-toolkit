@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+TOOLKIT_ROOT="$(realpath "$SCRIPT_DIR/..")"
+CASAOS_APP_DIR="/var/lib/casaos/apps/overleaf"
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "ERROR: bin/zimaos-up must be run as root (e.g., sudo ./bin/zimaos-up or run as root)." >&2
+  exit 1
+fi
+
+echo "==> 1. Generating resolved Docker Compose YAML for ZimaOS..."
+mkdir -p "$CASAOS_APP_DIR"
+"${TOOLKIT_ROOT}/bin/generate-zimaos-app" > "${CASAOS_APP_DIR}/docker-compose.yml"
+echo "    Saved to ${CASAOS_APP_DIR}/docker-compose.yml"
+
+echo "==> 2. Ensuring data permissions..."
+chmod -R 777 "${TOOLKIT_ROOT}/data"
+
+echo "==> 3. Restarting ZimaOS App Management service..."
+systemctl restart zimaos-app-management 2>/dev/null || true
+
+echo "==> 4. Deploying Overleaf stack via Docker Compose..."
+cd "$CASAOS_APP_DIR"
+docker compose up -d
+
+echo "==> 5. Verifying Mongo ReplicaSet..."
+sleep 3
+docker exec overleaf-mongo mongosh --quiet --eval '
+  try {
+    const status = rs.status();
+    if (!status.ok) throw new Error("not ok");
+  } catch(e) {
+    rs.initiate({ _id: "overleaf", members: [ { _id: 0, host: "mongo:27017" } ] });
+    print("Mongo replica set initiated.");
+  }
+' >/dev/null 2>&1 || true
+
+echo "--------------------------------------------------------"
+echo "SUCCESS: Overleaf + Clanker stack is online on ZimaOS!"
+echo "Overleaf Web UI:    http://$(hostname -I | awk '{print $1}'):8008"
+echo "Clanker Dashboard:  http://$(hostname -I | awk '{print $1}'):5050"
+echo "--------------------------------------------------------"
